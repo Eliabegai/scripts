@@ -1,0 +1,4 @@
+ pdfplumber
+ camelot-py
+ pandas
+ openpyxl
