@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sorteador de grupos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#eef1f6;--surface:#fff;--ink:#1b2433;--muted:#5d6980;--line:#d5dbe6;--accent:#2f4bd8;--accent-ink:#fff;--warn:#b4532a;--ok:#1f7a4d;
+--g0:#2f4bd8;--g1:#d9480f;--g2:#1f7a4d;--g3:#9c36b5;--g4:#c28a00;--g5:#0b7285;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11151c;--surface:#1a202a;--ink:#e8ecf4;--muted:#9aa6bb;--line:#2c3544;--accent:#8ea2ff;--accent-ink:#11151c;--warn:#f0a070;--ok:#6fd6a0;--g0:#8ea2ff;--g1:#ff9a62;--g2:#6fd6a0;--g3:#d99cf0;--g4:#ffd266;--g5:#6fd0e0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#11151c;--surface:#1a202a;--ink:#e8ecf4;--muted:#9aa6bb;--line:#2c3544;--accent:#8ea2ff;--accent-ink:#11151c;--warn:#f0a070;--ok:#6fd6a0;--g0:#8ea2ff;--g1:#ff9a62;--g2:#6fd6a0;--g3:#d99cf0;--g4:#ffd266;--g5:#6fd0e0;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:20px 16px 48px;display:grid;gap:20px;grid-template-columns:minmax(340px,440px) minmax(0,1fr);align-items:start}
+@media (max-width:820px){.wrap{grid-template-columns:1fr}}
+h1{font-size:1.7rem;font-weight:800;margin:0 0 2px;letter-spacing:-.02em}
+h2{font-size:1rem;font-weight:600;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.full{grid-column:1/-1}
+#busca{max-width:420px}
+label{display:block;font-weight:600;font-size:.9rem;margin-bottom:4px}
+input,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+textarea{min-height:320px;resize:vertical;line-height:1.45}
+#nome{font-size:1.2rem;font-weight:600;padding:14px 16px}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:12px}
+.row .grow{flex:1 1 200px}
+.num{width:92px}
+button{font:inherit;font-weight:600;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.small{padding:4px 9px;font-size:.85rem}
+button.ghost{border-color:transparent;color:var(--muted)}
+.msg{min-height:1.4em;margin:10px 0 0;font-size:.9rem;color:var(--muted)}
+.msg.ok{color:var(--ok)}.msg.err{color:var(--warn)}
+.saved{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.saved li{display:flex;gap:4px;align-items:stretch}
+.saved .open{flex:1;text-align:left;display:block;min-width:0}
+.saved .open b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.saved .open span{font-size:.8rem;color:var(--muted);font-weight:400}
+.saved li.active .open{border-color:var(--accent)}
+.empty{color:var(--muted);font-size:.9rem;margin:10px 0 0}
+.results{min-width:0}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px}
+.bar .acts{display:flex;gap:8px;flex-wrap:wrap}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--c);border-radius:10px;padding:12px 14px}
+.card header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.card h3{margin:0;font-size:1.05rem;font-weight:800;color:var(--c)}
+.card ol{margin:0;padding-left:22px;font-size:.9rem}
+.card li{padding:1px 0}
+.hist{margin-top:16px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.hist span{font-size:.85rem;color:var(--muted)}
+.hist button.on{border-color:var(--accent);color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="full">
+  <h1>Sorteador de grupos</h1>
+  <p class="sub">Cole os nomes, organize e sorteie. Tudo fica salvo neste navegador.</p>
+</div>
+  <section class="panel">
+    <div class="row" style="margin-top:0">
+      <div class="grow"><label for="nome">Identificador da lista</label><input id="nome" placeholder="Ex.: Turma 307" autocomplete="off"></div>
+    </div>
+    <div style="margin-top:12px">
+      <label for="nomes">Nomes (um por linha)</label>
+      <textarea id="nomes" placeholder="Cole aqui. Aceita também listas copiadas do Python, com aspas e vírgulas."></textarea>
+    </div>
+    <div class="row">
+      <div><label for="qtd">Grupos</label><input id="qtd" class="num" type="number" min="1" value="3"></div>
+      <button id="organizar" type="button">Organizar nomes</button>
+      <button id="salvar" type="button">Salvar lista</button>
+      <button id="sortear" type="button" class="primary">Sortear grupos</button>
+    </div>
+    <p id="msg" class="msg" role="status" aria-live="polite"></p>
+  </section>
+  <section id="resultado" class="results" hidden>
+    <div class="bar">
+      <h2 id="tituloRes" style="margin:0"></h2>
+      <div class="acts">
+        <button id="copiarTudo" type="button">Copiar tudo</button>
+        <button id="refazer" type="button" class="primary">Refazer sorteio</button>
+      </div>
+    </div>
+    <div id="grid" class="grid"></div>
+    <div id="hist" class="hist"></div>
+  </section>
+<aside class="panel full">
+  <h2>Listas salvas</h2>
+  <input id="busca" type="search" placeholder="Buscar por lista ou nome" aria-label="Buscar listas">
+  <ul id="saved" class="saved"></ul>
+  <p id="vazio" class="empty" hidden>Nenhuma lista salva ainda.</p>
+  <div class="row"><button id="nova" type="button" class="small">Nova lista</button></div>
+</aside>
+</div>
+<script>
+(function(){
+var KEY='sorteador-grupos-v1', MAX_HIST=10, store={lists:[]}, atual=null, histIdx=0;
+var $=function(id){return document.getElementById(id)};
+
+function load(){try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&Array.isArray(d.lists))store=d}}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(store));return true}catch(e){msg('Não foi possível salvar neste navegador.','err');return false}}
+function msg(t,c){var m=$('msg');m.textContent=t||'';m.className='msg'+(c?' '+c:'')}
+
+function parse(text){
+  var itens=text.split(/[\n;,]+/).map(function(s){
+    return s.replace(/[\[\]"“”]/g,' ').replace(/^\s*'|'\s*$/g,'').replace(/\s+/g,' ').trim().toLocaleUpperCase('pt-BR');
+  }).filter(Boolean);
+  var vistos={},unicos=[];
+  itens.forEach(function(n){if(!vistos[n]){vistos[n]=1;unicos.push(n)}});
+  unicos.sort(function(a,b){return a.localeCompare(b,'pt-BR')});
+  return {nomes:unicos,repetidos:itens.length-unicos.length};
+}
+function organizar(){
+  var r=parse($('nomes').value);
+  $('nomes').value=r.nomes.join('\n');
+  msg(r.nomes.length+' nomes organizados'+(r.repetidos?' ('+r.repetidos+' repetido'+(r.repetidos>1?'s':'')+' removido'+(r.repetidos>1?'s':'')+')':'')+'.','ok');
+  return r.nomes;
+}
+function embaralhar(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function dividir(nomes,n){var m=embaralhar(nomes),g=[];for(var i=0;i<n;i++)g.push(m.filter(function(_,k){return k%n===i}));return g}
+
+function achar(nome){var k=nome.trim().toLocaleUpperCase('pt-BR');return store.lists.find(function(l){return l.name.toLocaleUpperCase('pt-BR')===k})}
+function salvarLista(nomes){
+  var nome=$('nome').value.replace(/\s+/g,' ').trim();
+  if(!nome){msg('Dê um identificador à lista para poder salvá-la.','err');$('nome').focus();return null}
+  var l=achar(nome);
+  if(!l){l={name:nome,names:[],history:[]};store.lists.push(l)}
+  l.name=nome;l.names=nomes;l.updated=Date.now();
+  atual=l;persist();renderSaved();return l;
+}
+function sortear(){
+  var nomes=organizar();
+  if(nomes.length<2){msg('Adicione pelo menos 2 nomes.','err');return}
+  var n=parseInt($('qtd').value,10);
+  if(!n||n<1){msg('Informe a quantidade de grupos.','err');return}
+  if(n>nomes.length){n=nomes.length;$('qtd').value=n;}
+  var l=salvarLista(nomes);if(!l)return;
+  l.history.unshift({t:Date.now(),n:n,groups:dividir(nomes,n)});
+  l.history=l.history.slice(0,MAX_HIST);
+  histIdx=0;persist();renderSaved();renderResult();
+  msg('Sorteio feito e salvo em “'+l.name+'”.','ok');
+}
+function fmtData(t){return new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+function texto(g,i){return 'Grupo '+(i+1)+':\n'+g.join('\n')}
+function copiar(t){
+  function fallback(){var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();var ok=false;try{ok=document.execCommand('copy')}catch(e){}document.body.removeChild(a);return ok}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){msg('Copiado.','ok')},function(){msg(fallback()?'Copiado.':'Não foi possível copiar.',fallback?'ok':'err')})}
+  else msg(fallback()?'Copiado.':'Não foi possível copiar.','ok');
+}
+function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+
+function renderResult(){
+  var box=$('resultado');
+  if(!atual||!atual.history.length){box.hidden=true;return}
+  var d=atual.history[histIdx]||atual.history[0];
+  box.hidden=false;
+  $('tituloRes').textContent=atual.name+' · '+d.n+' grupo'+(d.n>1?'s':'')+' · '+fmtData(d.t);
+  var grid=$('grid');grid.textContent='';
+  d.groups.forEach(function(g,i){
+    var c=el('article','card');c.style.setProperty('--c','var(--g'+(i%6)+')');
+    var h=el('header');h.appendChild(el('h3',null,'Grupo '+(i+1)+' ('+g.length+')'));
+    var b=el('button','small ghost','Copiar');b.type='button';b.onclick=function(){copiar(texto(g,i))};h.appendChild(b);
+    var ol=el('ol');g.forEach(function(n){ol.appendChild(el('li',null,n))});
+    c.appendChild(h);c.appendChild(ol);grid.appendChild(c);
+  });
+  var hs=$('hist');hs.textContent='';
+  if(atual.history.length>1){
+    hs.appendChild(el('span',null,'Sorteios anteriores:'));
+    atual.history.forEach(function(x,i){
+      var b=el('button','small'+(i===histIdx?' on':''),fmtData(x.t)+' · '+x.n);b.type='button';
+      b.onclick=function(){histIdx=i;renderResult()};hs.appendChild(b);
+    });
+  }
+}
+function renderSaved(){
+  var q=$('busca').value.trim().toLocaleUpperCase('pt-BR'),ul=$('saved');ul.textContent='';
+  var ls=store.lists.slice().sort(function(a,b){return (b.updated||0)-(a.updated||0)}).filter(function(l){
+    return !q||l.name.toLocaleUpperCase('pt-BR').indexOf(q)>-1||l.names.some(function(n){return n.indexOf(q)>-1});
+  });
+  $('vazio').hidden=store.lists.length>0;
+  if(store.lists.length&&!ls.length){ul.appendChild(el('li','empty','Nada encontrado.'))}
+  ls.forEach(function(l){
+    var li=el('li',atual===l?'active':'');
+    var b=el('button','open');b.type='button';
+    b.appendChild(el('b',null,l.name));b.appendChild(el('span',null,l.names.length+' nomes · '+l.history.length+' sorteio'+(l.history.length===1?'':'s')));
+    b.onclick=function(){abrir(l)};
+    var x=el('button','small ghost','×');x.type='button';x.title='Excluir lista';x.setAttribute('aria-label','Excluir '+l.name);
+    x.onclick=function(){if(confirm('Excluir a lista “'+l.name+'” e seu histórico?')){store.lists=store.lists.filter(function(z){return z!==l});if(atual===l){atual=null;renderResult()}persist();renderSaved()}};
+    li.appendChild(b);li.appendChild(x);ul.appendChild(li);
+  });
+}
+function abrir(l){
+  atual=l;histIdx=0;$('nome').value=l.name;$('nomes').value=l.names.join('\n');
+  if(l.history[0])$('qtd').value=l.history[0].n;
+  msg('');renderSaved();renderResult();
+}
+function nova(){atual=null;$('nome').value='';$('nomes').value='';msg('');renderSaved();renderResult();$('nome').focus()}
+
+$('organizar').onclick=organizar;
+$('salvar').onclick=function(){var n=organizar();var l=salvarLista(n);if(l)msg('Lista “'+l.name+'” salva.','ok')};
+$('sortear').onclick=sortear;
+$('refazer').onclick=sortear;
+$('copiarTudo').onclick=function(){if(!atual)return;var d=atual.history[histIdx]||atual.history[0];copiar(atual.name+'\n\n'+d.groups.map(texto).join('\n\n'))};
+$('busca').oninput=renderSaved;
+$('nova').onclick=nova;
+
+load();renderSaved();
+if(store.lists.length){var u=store.lists.slice().sort(function(a,b){return (b.updated||0)-(a.updated||0)})[0];abrir(u)}
+})();
+</script>
+</body>
+</html>
